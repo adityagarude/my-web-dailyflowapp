@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DayFlow — AI Life Assistant</title>
+<style>
+:root {
+  --bg: #0f0f13;
+  --bg2: #16161d;
+  --bg3: #1e1e28;
+  --bg4: #252530;
+  --border: #2e2e3a;
+  --text: #e8e8f0;
+  --text2: #9191a8;
+  --text3: #5a5a72;
+  --accent: #7c6af7;
+  --accent2: #9d8fff;
+  --accent-bg: rgba(124,106,247,0.12);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.1);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.1);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251,191,36,0.1);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.1);
+  --teal: #2dd4bf;
+  --teal-bg: rgba(45,212,191,0.1);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  user-select: none;
+}
+
+/* LAYOUT */
+#app { display: flex; flex-direction: column; height: 100vh; max-width: 430px; margin: 0 auto; position: relative; background: var(--bg); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+#main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
+#main::-webkit-scrollbar { display: none; }
+
+/* BOTTOM NAV */
+#nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  display: flex; padding: 8px 0 20px;
+  z-index: 100;
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; padding: 4px 0; border: none; background: none; color: var(--text3);
+  font-size: 10px; font-family: inherit; transition: color .2s;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.nav-ai { position: relative; }
+.nav-ai .ai-fab {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: -20px; box-shadow: 0 4px 20px rgba(124,106,247,0.5);
+}
+
+/* SCREENS */
+.screen { display: none; padding: 0; }
+.screen.active { display: block; }
+
+/* TOP HEADER */
+.top-header {
+  padding: 52px 20px 16px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.top-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.top-header .sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+
+/* CARDS */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px; margin: 0 16px 12px;
+}
+.card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 20px 10px;
+}
+.section-header h2 { font-size: 17px; font-weight: 600; }
+.section-header .action { font-size: 13px; color: var(--accent); cursor: pointer; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 600; transition: all .15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-ghost { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg4); }
+.btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+.btn-full { width: 100%; }
+
+/* TASK ITEM */
+.task-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.task-item:last-child { border-bottom: none; }
+.task-check {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
+  flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.task-check.done { background: var(--green); border-color: var(--green); }
+.task-check.done::after { content: '✓'; color: #000; font-size: 12px; font-weight: 700; }
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-title.done { text-decoration: line-through; color: var(--text3); }
+.task-meta { font-size: 12px; color: var(--text2); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+.priority-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.p-high { background: var(--red); }
+.p-medium { background: var(--amber); }
+.p-low { background: var(--green); }
+.priority-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.ph { background: var(--red-bg); color: var(--red); }
+.pm { background: var(--amber-bg); color: var(--amber); }
+.pl { background: var(--green-bg); color: var(--green); }
+
+/* HABIT RING */
+.habit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 16px 12px; }
+.habit-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; cursor: pointer; transition: all .2s;
+}
+.habit-card.completed { border-color: var(--green); background: rgba(74,222,128,0.06); }
+.habit-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.habit-emoji { font-size: 24px; }
+.habit-streak { font-size: 12px; color: var(--amber); font-weight: 600; }
+.habit-name { font-size: 14px; font-weight: 600; }
+.habit-progress { margin-top: 8px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.habit-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width .4s; }
+
+/* NOTES */
+.notes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 16px 12px; }
+.note-card {
+  border-radius: var(--radius); padding: 14px; cursor: pointer; position: relative;
+  min-height: 110px; display: flex; flex-direction: column; gap: 6px;
+}
+.note-card h4 { font-size: 14px; font-weight: 600; }
+.note-card p { font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+.note-date { font-size: 10px; color: rgba(255,255,255,0.4); }
+
+/* EXPENSE */
+.expense-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.expense-item:last-child { border-bottom: none; }
+.exp-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.exp-body { flex: 1; }
+.exp-name { font-size: 14px; font-weight: 500; }
+.exp-cat { font-size: 12px; color: var(--text2); }
+.exp-amount { font-size: 15px; font-weight: 700; }
+
+/* AI CHAT */
+#ai-screen { display: flex; flex-direction: column; height: calc(100vh - 72px); }
+.chat-header { padding: 52px 20px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.chat-header h1 { font-size: 22px; font-weight: 700; }
+.chat-header p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.chat-messages::-webkit-scrollbar { display: none; }
+.msg { max-width: 82%; display: flex; flex-direction: column; gap: 4px; }
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.ai { align-self: flex-start; align-items: flex-start; }
+.bubble {
+  padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.5;
+}
+.msg.user .bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.msg.ai .bubble { background: var(--bg3); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid var(--border); white-space: pre-wrap; }
+.msg-time { font-size: 10px; color: var(--text3); }
+.chat-chips { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; flex-shrink: 0; }
+.chat-chips::-webkit-scrollbar { display: none; }
+.chip {
+  white-space: nowrap; padding: 7px 14px; border-radius: 20px;
+  background: var(--bg3); border: 1px solid var(--border);
+  font-size: 13px; cursor: pointer; color: var(--text); font-family: inherit;
+  transition: all .15s;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chat-input-row { display: flex; gap: 10px; padding: 10px 16px 20px; flex-shrink: 0; border-top: 1px solid var(--border); }
+.chat-input {
+  flex: 1; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 22px; padding: 10px 16px; color: var(--text); font-size: 14px;
+  font-family: inherit; outline: none; resize: none; max-height: 100px;
+}
+.chat-input:focus { border-color: var(--accent); }
+.send-btn {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent);
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s;
+}
+.send-btn:hover { background: var(--accent2); }
+.send-btn svg { width: 18px; height: 18px; fill: #fff; }
+.typing { display: flex; gap: 4px; padding: 12px 16px; }
+.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: blink 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: .2s; }
+.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  width: 100%; max-width: 430px; background: var(--bg2); border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border); border-bottom: none;
+  padding: 24px 20px 40px;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text);
+  font-size: 14px; font-family: inherit; outline: none;
+}
+.form-input:focus { border-color: var(--accent); }
+textarea.form-input { resize: vertical; min-height: 80px; }
+.seg-control { display: flex; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 3px; }
+.seg-btn { flex: 1; padding: 7px; border-radius: 6px; border: none; background: none; color: var(--text2); font-size: 13px; font-family: inherit; cursor: pointer; transition: all .15s; font-weight: 500; }
+.seg-btn.active { background: var(--accent); color: #fff; }
+
+/* PLANNER */
+.timeline { padding: 0 16px 12px; }
+.time-block {
+  display: flex; gap: 12px; margin-bottom: 4px; position: relative;
+}
+.time-block::before {
+  content: ''; position: absolute; left: 51px; top: 20px; bottom: -4px; width: 1px; background: var(--border);
+}
+.time-block:last-child::before { display: none; }
+.time-label { font-size: 11px; color: var(--text3); width: 40px; padding-top: 8px; text-align: right; flex-shrink: 0; }
+.time-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 11px; flex-shrink: 0; border: 2px solid var(--bg); }
+.time-content {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px; margin-bottom: 4px;
+}
+.time-content h4 { font-size: 14px; font-weight: 600; }
+.time-content p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* SETTINGS */
+.settings-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.settings-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.settings-label { flex: 1; font-size: 15px; }
+.settings-sub { font-size: 12px; color: var(--text2); }
+.settings-chevron { color: var(--text3); font-size: 16px; }
+
+/* SEARCH BAR */
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 22px;
+  padding: 8px 14px; margin: 0 16px 12px;
+}
+.search-bar input { flex: 1; background: none; border: none; color: var(--text); font-size: 14px; font-family: inherit; outline: none; }
+.search-bar svg { width: 16px; height: 16px; stroke: var(--text3); flex-shrink: 0; }
+
+/* STATS ROW */
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px 12px; }
+.stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 12px; text-align: center; }
+.stat-val { font-size: 24px; font-weight: 700; }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* API KEY SCREEN */
+.api-setup {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 24px; text-align: center;
+}
+.api-setup .logo { font-size: 64px; margin-bottom: 24px; }
+.api-setup h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.api-setup p { font-size: 14px; color: var(--text2); margin-bottom: 28px; line-height: 1.7; }
+.api-link { color: var(--accent); text-decoration: none; }
+
+/* MISC */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty-state .emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+.tag { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+.flex-row { display: flex; align-items: center; gap: 8px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.balance-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 8px 0; }
+.balance-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--red), var(--accent)); transition: width .5s; }
+.green-text { color: var(--green); }
+.red-text { color: var(--red); }
+.ai-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.plan-block { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin: 0 16px 12px; }
+.plan-block h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.plan-block p { font-size: 13px; color: var(--text2); }
+.generate-btn {
+  margin: 0 16px 12px; width: calc(100% - 32px);
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  color: #fff; border: none; border-radius: var(--radius); padding: 14px;
+  font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity .2s;
+}
+.generate-btn:hover { opacity: 0.9; }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 18px; font-size: 13px; color: var(--text); z-index: 300;
+  opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- APP SETUP SCREEN -->
+<div id="setup-screen" style="display:none">
+  <div class="api-setup">
+    <div class="logo">⚡</div>
+    <h1>Welcome to DayFlow</h1>
+    <p>Your AI-powered personal life assistant.<br>Enter your Anthropic API key to power the AI features.<br>Your key is stored only in your browser.</p>
+    <div style="width:100%;margin-bottom:14px">
+      <input class="form-input" id="api-key-input" type="password" placeholder="sk-ant-api03-..." style="width:100%;font-size:15px;padding:14px">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveApiKey()" style="font-size:16px;padding:14px">Start Using DayFlow →</button>
+    <p style="margin-top:16px;font-size:12px">
+      Get your key at <a class="api-link" href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      <span style="color:var(--text3)">You can also skip this and use the app without AI features</span>
+    </p>
+    <button class="btn btn-ghost" onclick="skipSetup()" style="margin-top:10px">Skip for now</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <div id="main">
+
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen active">
+      <div class="top-header">
+        <div>
+          <h1 id="greeting">Good morning</h1>
+          <div class="sub" id="today-date"></div>
+        </div>
+        <div class="avatar" onclick="showScreen('settings')" id="user-avatar">DF</div>
+      </div>
+
+      <!-- Today's focus -->
+      <div class="section-header">
+        <h2>Today's focus</h2>
+        <span class="action" onclick="showScreen('tasks')">See all</span>
+      </div>
+      <div class="card" id="home-tasks">
+        <div style="color:var(--text2);font-size:13px">Loading tasks...</div>
+      </div>
+
+      <!-- Habits -->
+      <div class="section-header">
+        <h2>Habits today</h2>
+        <span class="action" onclick="showScreen('habits')">See all</span>
+      </div>
+      <div id="home-habits" style="padding:0 16px 12px;display:flex;gap:10px;overflow-x:auto">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Stats -->
+      <div class="section-header"><h2>This month</h2></div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val green-text" id="stat-tasks">0</div>
+          <div class="stat-label">Tasks done</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-streak" style="color:var(--amber)">0</div>
+          <div class="stat-label">Best streak</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-notes" style="color:var(--blue)">0</div>
+          <div class="stat-label">Notes</div>
+        </div>
+      </div>
+
+      <!-- AI Tip -->
+      <div class="section-header"><h2>AI insight</h2></div>
+      <div class="card" id="ai-tip-card" style="border-color:rgba(124,106,247,0.3);background:var(--accent-bg)">
+        <div class="ai-badge" style="margin-bottom:8px">✦ DayFlow AI</div>
+        <p id="ai-tip-text" style="font-size:14px;color:var(--text);line-height:1.6">Tap the AI tab to get personalised insights and plan your day.</p>
+      </div>
+    </div>
+
+    <!-- TASKS SCREEN -->
+    <div id="tasks-screen" class="screen">
+      <div class="top-header">
+        <div>
+          <h1>Tasks</h1>
+          <div class="sub" id="tasks-count-label">0 tasks today</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('task-modal')" style="padding:8px 14px;font-size:13px">+ Add</button>
+      </div>
+
+      <!-- Filter -->
+      <div style="padding:0 16px 12px">
+        <div class="seg-control">
+          <button class="seg-btn active" onclick="filterTasks('todo',this)">Todo</button>
+          <button class="seg-btn" onclick="filterTasks('done',this)">Done</button>
+          <button class="seg-btn" onclick="filterTasks('all',this)">All</button>
+        </div>
+      </div>
+
+      <div class="card" id="task-list"></div>
+
+      <div style="padding:0 16px 12px;margin-top:4px">
+        <button class="generate-btn" onclick="aiPrioritise()">
+          <span>✦</span> AI Prioritise My Tasks
+        </button>
+      </div>
+    </div>
+
+    <!-- PLANNER SCREEN -->
+    <div id="planner-screen" class="screen">
+      <div class="top-header">
+        <div>
+          <h1>Daily Planner</h1>
+          <div class="sub">AI-generated schedule</div>
+        </div>
+      </div>
+
+      <button class="generate-btn" id="plan-btn" onclick="generatePlan()">
+        <span>✦</span> Plan My Day with AI
+      </button>
+
+      <div id="plan-output">
+        <div class="empty-state">
+          <span class="emoji">🗓️</span>
+          <p>Tap above and AI will build your schedule based on your tasks and habits</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI CHAT SCREEN -->
+    <div id="ai-screen" class="screen" style="display:none">
+      <div class="chat-header">
+        <h1>✦ DayFlow AI</h1>
+        <p>Your personal life assistant</p>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="msg ai">
+          <div class="bubble">Hi! I'm DayFlow AI. I can help you plan your day, prioritise tasks, review your habits, and improve your productivity. What would you like help with?</div>
+          <div class="msg-time">Now</div>
+        </div>
+      </div>
+      <div class="chat-chips">
+        <button class="chip" onclick="sendChip('Plan my day')">📅 Plan my day</button>
+        <button class="chip" onclick="sendChip('What should I focus on right now?')">🎯 Focus advice</button>
+        <button class="chip" onclick="sendChip('Review my habits and give me tips')">✅ Habit tips</button>
+        <button class="chip" onclick="sendChip('Summarise my day and what I achieved')">📊 Day summary</button>
+        <button class="chip" onclick="sendChip('How can I be more productive?')">🚀 Productivity</button>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Ask anything..." rows="1" onkeydown="handleChatKey(event)"></textarea>
+        <button class="send-btn" onclick="sendChat()">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- HABITS SCREEN -->
+    <div id="habits-screen" class="screen">
+      <div class="top-header">
+        <div>
+          <h1>Habits</h1>
+          <div class="sub" id="habits-sub">Build better daily routines</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('habit-modal')" style="padding:8px 14px;font-size:13px">+ Add</button>
+      </div>
+
+      <!-- Progress ring summary -->
+      <div class="card" style="text-align:center;padding:20px">
+        <div style="font-size:42px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="habit-pct">0%</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:4px">of today's habits completed</div>
+      </div>
+
+      <div class="habit-grid" id="habit-grid"></div>
+    </div>
+
+    <!-- NOTES SCREEN -->
+    <div id="notes-screen" class="screen">
+      <div class="top-header">
+        <div><h1>Notes</h1></div>
+        <button class="btn btn-primary" onclick="openModal('note-modal')" style="padding:8px 14px;font-size:13px">+ Add</button>
+      </div>
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search notes..." oninput="searchNotes(this.value)">
+      </div>
+      <div class="notes-grid" id="notes-grid"></div>
+    </div>
+
+    <!-- EXPENSES SCREEN -->
+    <div id="expenses-screen" class="screen">
+      <div class="top-header">
+        <div><h1>Expenses</h1></div>
+        <button class="btn btn-primary" onclick="openModal('expense-modal')" style="padding:8px 14px;font-size:13px">+ Add</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Monthly summary</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <div>
+            <div style="font-size:11px;color:var(--text2)">Spent</div>
+            <div style="font-size:26px;font-weight:700;color:var(--red)" id="total-spent">₹0</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--text2)">Income</div>
+            <div style="font-size:26px;font-weight:700;color:var(--green)" id="total-income">₹0</div>
+          </div>
+        </div>
+        <div class="balance-bar"><div class="balance-fill" id="expense-bar" style="width:0%"></div></div>
+        <div style="font-size:12px;color:var(--text2);text-align:center" id="balance-label">Balance: ₹0</div>
+      </div>
+
+      <!-- Category breakdown -->
+      <div class="section-header"><h2>By category</h2></div>
+      <div id="category-breakdown" style="padding:0 16px 12px;display:flex;flex-wrap:wrap;gap:8px"></div>
+
+      <div class="section-header"><h2>Transactions</h2></div>
+      <div class="card" id="expense-list">
+        <div class="empty-state"><span class="emoji">💸</span><p>No transactions yet</p></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS SCREEN -->
+    <div id="settings-screen" class="screen">
+      <div class="top-header">
+        <div><h1>Settings</h1></div>
+      </div>
+
+      <div style="text-align:center;padding:8px 20px 24px">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a855f7);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 12px" id="settings-avatar">DF</div>
+        <div style="font-size:18px;font-weight:700" id="settings-name">DayFlow User</div>
+        <div style="font-size:13px;color:var(--text2)" id="settings-email">Free plan</div>
+      </div>
+
+      <div class="card">
+        <div class="settings-item" onclick="openModal('profile-modal')">
+          <div class="settings-icon" style="background:var(--blue-bg)">👤</div>
+          <div class="flex-row" style="flex:1;justify-content:space-between">
+            <div><div class="settings-label">Edit Profile</div><div class="settings-sub">Name and preferences</div></div>
+            <div class="settings-chevron">›</div>
+          </div>
+        </div>
+        <div class="settings-item" onclick="changeApiKey()">
+          <div class="settings-icon" style="background:var(--accent-bg)">🔑</div>
+          <div class="flex-row" style="flex:1;justify-content:space-between">
+            <div><div class="settings-label">API Key</div><div class="settings-sub" id="api-key-status">Not set</div></div>
+            <div class="settings-chevron">›</div>
+          </div>
+        </div>
+        <div class="settings-item" onclick="openModal('currency-modal')">
+          <div class="settings-icon" style="background:var(--green-bg)">💱</div>
+          <div class="flex-row" style="flex:1;justify-content:space-between">
+            <div><div class="settings-label">Currency</div><div class="settings-sub" id="curr-setting">₹ INR</div></div>
+            <div class="settings-chevron">›</div>
+          </div>
+        </div>
+        <div class="settings-item" onclick="exportData()">
+          <div class="settings-icon" style="background:var(--teal-bg)">📤</div>
+          <div class="flex-row" style="flex:1;justify-content:space-between">
+            <div><div class="settings-label">Export Data</div><div class="settings-sub">Download as JSON</div></div>
+            <div class="settings-chevron">›</div>
+          </div>
+        </div>
+        <div class="settings-item" onclick="clearData()">
+          <div class="settings-icon" style="background:var(--red-bg)">🗑️</div>
+          <div class="flex-row" style="flex:1;justify-content:space-between">
+            <div><div class="settings-label">Clear All Data</div><div class="settings-sub">Reset everything</div></div>
+            <div class="settings-chevron">›</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:20px;font-size:12px;color:var(--text3)">
+        DayFlow v1.0 · Built with Claude AI · All data stored locally
+      </div>
+    </div>
+
+  </div><!-- end #main -->
+
+  <!-- BOTTOM NAV -->
+  <div id="nav">
+    <button class="nav-btn active" onclick="showScreen('home')" id="nav-home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" onclick="showScreen('tasks')" id="nav-tasks">
+      <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tasks
+    </button>
+    <button class="nav-btn nav-ai" onclick="showScreen('ai')" id="nav-ai">
+      <div class="ai-fab">
+        <svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke:#fff;stroke-width:1.8"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/></svg>
+      </div>
+      AI
+    </button>
+    <button class="nav-btn" onclick="showScreen('habits')" id="nav-habits">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Habits
+    </button>
+    <button class="nav-btn" onclick="showScreen('more')" id="nav-more">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      More
+    </button>
+  </div>
+</div>
+
+<!-- MORE MENU OVERLAY -->
+<div class="modal-overlay" id="more-overlay" onclick="closeMoreMenu(event)">
+  <div class="modal-sheet" style="padding-bottom:100px">
+    <div class="modal-handle"></div>
+    <div class="modal-title">More</div>
+    <div class="settings-item" onclick="gotoScreen('planner')">
+      <div class="settings-icon" style="background:var(--accent-bg)">📅</div>
+      <div><div class="settings-label">Daily Planner</div><div class="settings-sub">AI-generated schedule</div></div>
+    </div>
+    <div class="settings-item" onclick="gotoScreen('notes')">
+      <div class="settings-icon" style="background:var(--blue-bg)">📝</div>
+      <div><div class="settings-label">Notes</div><div class="settings-sub">Quick capture</div></div>
+    </div>
+    <div class="settings-item" onclick="gotoScreen('expenses')">
+      <div class="settings-icon" style="background:var(--green-bg)">💰</div>
+      <div><div class="settings-label">Expenses</div><div class="settings-sub">Track income & spending</div></div>
+    </div>
+    <div class="settings-item" onclick="gotoScreen('settings')">
+      <div class="settings-icon" style="background:var(--bg3)">⚙️</div>
+      <div><div class="settings-label">Settings</div><div class="settings-sub">Preferences & API key</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="task-modal-title">New Task</div>
+    <input type="hidden" id="editing-task-id">
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" id="task-title" placeholder="What needs to be done?" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-input" id="task-notes" placeholder="Add details..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Priority</label>
+      <div class="seg-control">
+        <button class="seg-btn active" id="p-high" onclick="setPriority('high')">🔴 High</button>
+        <button class="seg-btn" id="p-medium" onclick="setPriority('medium')">🟡 Medium</button>
+        <button class="seg-btn" id="p-low" onclick="setPriority('low')">🟢 Low</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Due date & time</label>
+      <input class="form-input" id="task-due" type="datetime-local">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Estimated time</label>
+      <select class="form-input" id="task-estimate">
+        <option value="15">15 minutes</option>
+        <option value="30" selected>30 minutes</option>
+        <option value="60">1 hour</option>
+        <option value="90">1.5 hours</option>
+        <option value="120">2 hours</option>
+        <option value="180">3 hours</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('task-modal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- HABIT MODAL -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New Habit</div>
+    <div class="form-group">
+      <label class="form-label">Name</label>
+      <input class="form-input" id="habit-name" placeholder="e.g. Drink water, Read, Exercise">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="emoji-picker">
+        <!-- filled by JS -->
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Frequency</label>
+      <div class="seg-control">
+        <button class="seg-btn active" id="freq-daily" onclick="setFreq('daily')">Daily</button>
+        <button class="seg-btn" id="freq-weekdays" onclick="setFreq('weekdays')">Weekdays</button>
+        <button class="seg-btn" id="freq-weekends" onclick="setFreq('weekends')">Weekends</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('habit-modal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveHabit()">Add Habit</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="note-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="note-modal-title">New Note</div>
+    <input type="hidden" id="editing-note-id">
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-input" id="note-title" placeholder="Note title">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Content</label>
+      <textarea class="form-input" id="note-body" placeholder="Write your note..." style="min-height:140px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Colour</label>
+      <div style="display:flex;gap:10px" id="note-colors"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('note-modal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New Transaction</div>
+    <div class="form-group">
+      <div class="seg-control">
+        <button class="seg-btn active" id="exp-expense" onclick="setExpType('expense')">💸 Expense</button>
+        <button class="seg-btn" id="exp-income" onclick="setExpType('income')">💰 Income</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount</label>
+      <input class="form-input" id="exp-amount" type="number" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="exp-desc" placeholder="What was this for?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-input" id="exp-cat">
+        <option>🍕 Food</option>
+        <option>🚗 Transport</option>
+        <option>🛍️ Shopping</option>
+        <option>🏠 Housing</option>
+        <option>💊 Health</option>
+        <option>🎮 Entertainment</option>
+        <option>📚 Education</option>
+        <option>💼 Work</option>
+        <option>💸 Bills</option>
+        <option>🤝 Salary</option>
+        <option>📈 Investment</option>
+        <option>🎁 Gift</option>
+        <option>🔧 Other</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('expense-modal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveExpense()">Add Transaction</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Profile</div>
+    <div class="form-group">
+      <label class="form-label">Display Name</label>
+      <input class="form-input" id="profile-name" placeholder="Your name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Work Start Time</label>
+      <input class="form-input" id="work-start" type="time" value="09:00">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Work End Time</label>
+      <input class="form-input" id="work-end" type="time" value="18:00">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('profile-modal')">Cancel</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveProfile()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CURRENCY MODAL -->
+<div class="modal-overlay" id="currency-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Currency</div>
+    <div id="currency-list" style="display:flex;flex-direction:column;gap:4px"></div>
+    <button class="btn btn-ghost btn-full" onclick="closeModal('currency-modal')" style="margin-top:16px">Close</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA STORE (localStorage)
+// ─────────────────────────────────────────────
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem('df_'+k)) } catch(e) { return null } },
+  set: (k,v) => localStorage.setItem('df_'+k, JSON.stringify(v)),
+};
+
+let state = {
+  tasks: DB.get('tasks') || [],
+  habits: DB.get('habits') || [],
+  habitLogs: DB.get('habitLogs') || {},
+  notes: DB.get('notes') || [],
+  expenses: DB.get('expenses') || [],
+  profile: DB.get('profile') || { name: 'DayFlow User', workStart: '09:00', workEnd: '18:00' },
+  currency: DB.get('currency') || '₹',
+  apiKey: DB.get('apiKey') || '',
+  chatHistory: DB.get('chatHistory') || [],
+  taskFilter: 'todo',
+  currentPriority: 'high',
+  currentFreq: 'daily',
+  currentExpType: 'expense',
+  currentNoteColor: '#2a2a3a',
+  selectedEmoji: '⭐',
+};
+
+function save() {
+  DB.set('tasks', state.tasks);
+  DB.set('habits', state.habits);
+  DB.set('habitLogs', state.habitLogs);
+  DB.set('notes', state.notes);
+  DB.set('expenses', state.expenses);
+  DB.set('profile', state.profile);
+  DB.set('currency', state.currency);
+  DB.set('chatHistory', state.chatHistory);
+}
+
+const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const today = () => new Date().toISOString().split('T')[0];
+const fmtDate = d => new Date(d).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+const fmtTime = d => new Date(d).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function init() {
+  if (!DB.get('setupDone')) {
+    document.getElementById('setup-screen').style.display = 'block';
+  } else {
+    document.getElementById('app').style.display = 'flex';
+    bootApp();
+  }
+}
+
+function bootApp() {
+  setupGreeting();
+  renderAll();
+  initEmojiPicker();
+  initNoteColors();
+  initCurrencyList();
+  updateApiKeyStatus();
+
+  // Load profile
+  document.getElementById('profile-name').value = state.profile.name;
+  document.getElementById('work-start').value = state.profile.workStart;
+  document.getElementById('work-end').value = state.profile.workEnd;
+  document.getElementById('settings-name').textContent = state.profile.name;
+  document.getElementById('user-avatar').textContent = state.profile.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'DF';
+  document.getElementById('settings-avatar').textContent = state.profile.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'DF';
+}
+
+function setupGreeting() {
+  const h = new Date().getHours();
+  const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = greet + ', ' + state.profile.name.split(' ')[0] + ' 👋';
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key) { alert('Please enter your API key'); return; }
+  state.apiKey = key;
+  DB.set('apiKey', key);
+  DB.set('setupDone', true);
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  bootApp();
+  showToast('API key saved! DayFlow is ready ⚡');
+}
+
+function skipSetup() {
+  DB.set('setupDone', true);
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  bootApp();
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────
+let currentScreen = 'home';
+
+function showScreen(name) {
+  if (name === 'more') {
+    openMoreMenu();
+    return;
+  }
+
+  // Special: AI screen needs flex
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+
+  const el = document.getElementById(name + '-screen');
+  if (!el) return;
+
+  if (name === 'ai') {
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    el.style.height = 'calc(100vh - 72px)';
+  } else {
+    el.style.display = 'block';
+  }
+  el.classList.add('active');
+
+  currentScreen = name;
+
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const nb = document.getElementById('nav-' + name);
+  if (nb) nb.classList.add('active');
+
+  if (name === 'home') renderHome();
+  if (name === 'tasks') renderTasks();
+  if (name === 'habits') renderHabits();
+  if (name === 'notes') renderNotes();
+  if (name === 'expenses') renderExpenses();
+}
+
+function gotoScreen(name) {
+  closeMoreMenu();
+  setTimeout(() => showScreen(name), 200);
+}
+
+function openMoreMenu() {
+  document.getElementById('more-overlay').classList.add('open');
+}
+
+function closeMoreMenu(e) {
+  if (!e || e.target === document.getElementById('more-overlay')) {
+    document.getElementById('more-overlay').classList.remove('open');
+  }
+}
+
+// ─────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────
+function openModal(id) {
+  if (id === 'task-modal') resetTaskForm();
+  if (id === 'profile-modal') {
+    document.getElementById('profile-name').value = state.profile.name;
+    document.getElementById('work-start').value = state.profile.workStart;
+    document.getElementById('work-end').value = state.profile.workEnd;
+  }
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ─────────────────────────────────────────────
+// RENDER ALL
+// ─────────────────────────────────────────────
+function renderAll() {
+  renderHome();
+  renderTasks();
+  renderHabits();
+  renderNotes();
+  renderExpenses();
+}
+
+// ─────────────────────────────────────────────
+// HOME
+// ─────────────────────────────────────────────
+function renderHome() {
+  setupGreeting();
+
+  // Top 3 tasks
+  const pending = state.tasks.filter(t => t.status === 'todo').slice(0, 3);
+  const taskEl = document.getElementById('home-tasks');
+  if (!pending.length) {
+    taskEl.innerHTML = '<div style="color:var(--text2);font-size:14px;text-align:center;padding:8px 0">🎉 No pending tasks! Great job.</div>';
+  } else {
+    taskEl.innerHTML = pending.map(t => `
+      <div class="task-item">
+        <div class="task-check ${t.status==='done'?'done':''}" onclick="quickComplete('${t.id}')"></div>
+        <div class="task-body">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">
+            <span class="priority-dot p-${t.priority}"></span>
+            ${t.priority}
+            ${t.due ? '· Due ' + fmtDate(t.due) : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Home habits mini
+  const habitsEl = document.getElementById('home-habits');
+  const todayHabits = getTodayHabits();
+  if (!todayHabits.length) {
+    habitsEl.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:4px 0">No habits yet. <span style="color:var(--accent);cursor:pointer" onclick="showScreen(\'habits\')">Add some →</span></div>';
+  } else {
+    habitsEl.innerHTML = todayHabits.slice(0,4).map(h => {
+      const done = isHabitDoneToday(h.id);
+      return `<div onclick="toggleHabit('${h.id}')" style="background:${done?'rgba(74,222,128,0.1)':'var(--bg2)'};border:1px solid ${done?'var(--green)':'var(--border)'};border-radius:10px;padding:10px 14px;cursor:pointer;flex-shrink:0;text-align:center;min-width:64px">
+        <div style="font-size:22px">${h.emoji}</div>
+        <div style="font-size:11px;margin-top:4px;color:${done?'var(--green)':'var(--text2)'}">${done?'✓ Done':'Todo'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Stats
+  const doneTasks = state.tasks.filter(t => {
+    if (t.status !== 'done') return false;
+    const m = new Date().getMonth();
+    return new Date(t.completedAt||t.createdAt).getMonth() === m;
+  }).length;
+  document.getElementById('stat-tasks').textContent = doneTasks;
+
+  const bestStreak = state.habits.length ? Math.max(0, ...state.habits.map(h => h.bestStreak||0)) : 0;
+  document.getElementById('stat-streak').textContent = bestStreak;
+  document.getElementById('stat-notes').textContent = state.notes.length;
+}
+
+function quickComplete(id) {
+  const t = state.tasks.find(t => t.id === id);
+  if (t) { t.status = 'done'; t.completedAt = new Date().toISOString(); save(); renderHome(); renderTasks(); }
+}
+
+// ─────────────────────────────────────────────
+// TASKS
+// ─────────────────────────────────────────────
+function resetTaskForm() {
+  document.getElementById('task-modal-title').textContent = 'New Task';
+  document.getElementById('editing-task-id').value = '';
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-notes').value = '';
+  document.getElementById('task-due').value = '';
+  setPriority('high');
+}
+
+function setPriority(p) {
+  state.currentPriority = p;
+  ['high','medium','low'].forEach(x => document.getElementById('p-'+x).classList.toggle('active', x===p));
+}
+
+function saveTask() {
+  const title = document.getElementById('task-title').value.trim();
+  if (!title) { showToast('Please enter a task title'); return; }
+  const editId = document.getElementById('editing-task-id').value;
+  const task = {
+    id: editId || uid(),
+    title,
+    notes: document.getElementById('task-notes').value,
+    priority: state.currentPriority,
+    status: 'todo',
+    due: document.getElementById('task-due').value,
+    estimatedMin: parseInt(document.getElementById('task-estimate').value) || 30,
+    createdAt: new Date().toISOString(),
+  };
+  if (editId) {
+    const i = state.tasks.findIndex(t => t.id === editId);
+    if (i >= 0) { state.tasks[i] = {...state.tasks[i], ...task, id: editId}; }
+  } else {
+    state.tasks.unshift(task);
+  }
+  save();
+  closeModal('task-modal');
+  renderAll();
+  showToast('Task saved ✓');
+}
+
+function editTask(id) {
+  const t = state.tasks.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('task-modal-title').textContent = 'Edit Task';
+  document.getElementById('editing-task-id').value = t.id;
+  document.getElementById('task-title').value = t.title;
+  document.getElementById('task-notes').value = t.notes || '';
+  document.getElementById('task-due').value = t.due || '';
+  document.getElementById('task-estimate').value = t.estimatedMin || 30;
+  setPriority(t.priority || 'medium');
+  openModal('task-modal');
+}
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  save(); renderAll(); showToast('Task deleted');
+}
+
+function toggleTask(id) {
+  const t = state.tasks.find(t => t.id === id);
+  if (!t) return;
+  t.status = t.status === 'todo' ? 'done' : 'todo';
+  if (t.status === 'done') t.completedAt = new Date().toISOString();
+  save(); renderTasks(); renderHome();
+}
+
+function filterTasks(filter, btn) {
+  state.taskFilter = filter;
+  document.querySelectorAll('#tasks-screen .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  let tasks = state.tasks;
+  if (state.taskFilter === 'todo') tasks = tasks.filter(t => t.status === 'todo');
+  else if (state.taskFilter === 'done') tasks = tasks.filter(t => t.status === 'done');
+
+  const pending = state.tasks.filter(t => t.status === 'todo').length;
+  document.getElementById('tasks-count-label').textContent = `${pending} pending task${pending !== 1 ? 's' : ''}`;
+
+  const el = document.getElementById('task-list');
+  if (!tasks.length) {
+    el.innerHTML = `<div class="empty-state"><span class="emoji">${state.taskFilter==='done'?'🎉':'📋'}</span><p>${state.taskFilter==='done'?'No completed tasks yet':'No tasks yet. Tap + to add one!'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = tasks.map(t => `
+    <div class="task-item">
+      <div class="task-check ${t.status==='done'?'done':''}" onclick="toggleTask('${t.id}')"></div>
+      <div class="task-body" onclick="editTask('${t.id}')">
+        <div class="task-title ${t.status==='done'?'done':''}">${t.title}</div>
+        <div class="task-meta">
+          <span class="priority-badge p${t.priority[0]}">${t.priority}</span>
+          ${t.due ? '· ' + fmtDate(t.due) : ''}
+          ${t.estimatedMin ? '· ~' + (t.estimatedMin >= 60 ? (t.estimatedMin/60).toFixed(1)+'h' : t.estimatedMin+'m') : ''}
+        </div>
+      </div>
+      <button onclick="deleteTask('${t.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;font-size:18px">×</button>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+// HABITS
+// ─────────────────────────────────────────────
+const EMOJIS = ['💧','🏃','📚','🧘','🍎','😴','✍️','🎯','💪','🌱','☀️','🧠','🎸','🥗','☕','🚴','🏊','📵','🙏','❤️'];
+
+function initEmojiPicker() {
+  const el = document.getElementById('emoji-picker');
+  el.innerHTML = EMOJIS.map(e => `
+    <div onclick="selectEmoji('${e}',this)" style="font-size:24px;cursor:pointer;padding:6px;border-radius:8px;border:2px solid transparent;transition:all .15s" class="emoji-opt">
+      ${e}
+    </div>
+  `).join('');
+  // Select first by default
+  selectEmoji(EMOJIS[0], el.querySelector('.emoji-opt'));
+}
+
+function selectEmoji(e, el) {
+  state.selectedEmoji = e;
+  document.querySelectorAll('.emoji-opt').forEach(x => x.style.borderColor = 'transparent');
+  if (el) el.style.borderColor = 'var(--accent)';
+}
+
+function setFreq(f) {
+  state.currentFreq = f;
+  ['daily','weekdays','weekends'].forEach(x => document.getElementById('freq-'+x).classList.toggle('active', x===f));
+}
+
+function saveHabit() {
+  const name = document.getElementById('habit-name').value.trim();
+  if (!name) { showToast('Please enter a habit name'); return; }
+  state.habits.push({
+    id: uid(),
+    name,
+    emoji: state.selectedEmoji,
+    frequency: state.currentFreq,
+    streak: 0,
+    bestStreak: 0,
+    createdAt: new Date().toISOString(),
+  });
+  save();
+  closeModal('habit-modal');
+  document.getElementById('habit-name').value = '';
+  renderAll();
+  showToast('Habit added! 🎯');
+}
+
+function getTodayHabits() {
+  const dow = new Date().getDay();
+  return state.habits.filter(h => {
+    if (h.frequency === 'daily') return true;
+    if (h.frequency === 'weekdays') return dow >= 1 && dow <= 5;
+    if (h.frequency === 'weekends') return dow === 0 || dow === 6;
+    return true;
+  });
+}
+
+function isHabitDoneToday(id) {
+  const log = state.habitLogs[id];
+  return log && log.lastDate === today();
+}
+
+function toggleHabit(id) {
+  const h = state.habits.find(h => h.id === id);
+  if (!h) return;
+
+  if (isHabitDoneToday(id)) {
+    // Undo
+    state.habitLogs[id] = { lastDate: null, count: 0 };
+    if (h.streak > 0) h.streak--;
+  } else {
+    const log = state.habitLogs[id] || {};
+    const wasYesterday = log.lastDate === new Date(Date.now()-86400000).toISOString().split('T')[0];
+    h.streak = wasYesterday ? (h.streak||0) + 1 : 1;
+    h.bestStreak = Math.max(h.bestStreak||0, h.streak);
+    state.habitLogs[id] = { lastDate: today(), count: (log.count||0) + 1 };
+  }
+  save();
+  renderAll();
+}
+
+function deleteHabit(id) {
+  state.habits = state.habits.filter(h => h.id !== id);
+  delete state.habitLogs[id];
+  save(); renderAll(); showToast('Habit removed');
+}
+
+function renderHabits() {
+  const todayHabits = getTodayHabits();
+  const done = todayHabits.filter(h => isHabitDoneToday(h.id)).length;
+  const pct = todayHabits.length ? Math.round(done / todayHabits.length * 100) : 0;
+
+  document.getElementById('habit-pct').textContent = pct + '%';
+  document.getElementById('habits-sub').textContent = done + '/' + todayHabits.length + ' habits done today';
+
+  const el = document.getElementById('habit-grid');
+  if (!state.habits.length) {
+    el.innerHTML = `<div class="empty-state" style="grid-column:span 2"><span class="emoji">🌱</span><p>No habits yet. Tap + to start building better routines!</p></div>`;
+    return;
+  }
+  el.innerHTML = state.habits.map(h => {
+    const isDone = isHabitDoneToday(h.id);
+    const log = state.habitLogs[h.id] || {};
+    return `
+      <div class="habit-card ${isDone?'completed':''}" onclick="toggleHabit('${h.id}')">
+        <div class="habit-card-top">
+          <div class="habit-emoji">${h.emoji}</div>
+          <div style="text-align:right">
+            <div class="habit-streak">🔥 ${h.streak||0}</div>
+            <button onclick="event.stopPropagation();deleteHabit('${h.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:0">×</button>
+          </div>
+        </div>
+        <div class="habit-name">${h.name}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">${h.frequency} · Best: ${h.bestStreak||0} days</div>
+        <div class="habit-progress"><div class="habit-fill" style="width:${isDone?100:0}%"></div></div>
+        ${isDone ? '<div style="font-size:11px;color:var(--green);margin-top:6px;font-weight:600">✓ Done today!</div>' : '<div style="font-size:11px;color:var(--text3);margin-top:6px">Tap to complete</div>'}
+      </div>
+    `;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
+// NOTES
+// ─────────────────────────────────────────────
+const NOTE_COLORS = [
+  { bg: '#1e2a1e', border: '#2d4a2d', label: 'Forest' },
+  { bg: '#1e1e2e', border: '#2d2d4a', label: 'Night' },
+  { bg: '#2e1e1e', border: '#4a2d2d', label: 'Ruby' },
+  { bg: '#2e2a1a', border: '#4a3d1d', label: 'Amber' },
+  { bg: '#1e2a2e', border: '#2d3d4a', label: 'Ocean' },
+  { bg: '#2a1e2e', border: '#3d2d4a', label: 'Violet' },
+];
+
+function initNoteColors() {
+  const el = document.getElementById('note-colors');
+  el.innerHTML = NOTE_COLORS.map((c,i) => `
+    <div onclick="selectNoteColor(${i},this)" style="width:28px;height:28px;border-radius:50%;background:${c.bg};border:2px solid ${i===0?'var(--accent)':c.border};cursor:pointer;transition:all .15s" class="nc-opt"></div>
+  `).join('');
+  state.currentNoteColor = NOTE_COLORS[0].bg;
+}
+
+function selectNoteColor(i, el) {
+  state.currentNoteColor = NOTE_COLORS[i].bg;
+  document.querySelectorAll('.nc-opt').forEach((x,j) => x.style.borderColor = j===i?'var(--accent)':NOTE_COLORS[j].border);
+}
+
+function saveNote() {
+  const title = document.getElementById('note-title').value.trim();
+  const body = document.getElementById('note-body').value.trim();
+  if (!title && !body) { showToast('Please add some content'); return; }
+
+  const editId = document.getElementById('editing-note-id').value;
+  const note = {
+    id: editId || uid(),
+    title: title || 'Untitled',
+    body,
+    color: state.currentNoteColor,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (editId) {
+    const i = state.notes.findIndex(n => n.id === editId);
+    if (i >= 0) state.notes[i] = { ...state.notes[i], ...note };
+  } else {
+    state.notes.unshift(note);
+  }
+  save();
+  closeModal('note-modal');
+  renderNotes();
+  renderHome();
+  showToast('Note saved ✓');
+}
+
+function editNote(id) {
+  const n = state.notes.find(n => n.id === id);
+  if (!n) return;
+  document.getElementById('note-modal-title').textContent = 'Edit Note';
+  document.getElementById('editing-note-id').value = n.id;
+  document.getElementById('note-title').value = n.title;
+  document.getElementById('note-body').value = n.body;
+  state.currentNoteColor = n.color;
+  openModal('note-modal');
+}
+
+function deleteNote(id) {
+  state.notes = state.notes.filter(n => n.id !== id);
+  save(); renderNotes(); renderHome(); showToast('Note deleted');
+}
+
+function searchNotes(q) {
+  renderNotes(q.toLowerCase());
+}
+
+function resetNoteForm() {
+  document.getElementById('note-modal-title').textContent = 'New Note';
+  document.getElementById('editing-note-id').value = '';
+  document.getElementById('note-title').value = '';
+  document.getElementById('note-body').value = '';
+}
+
+function renderNotes(search = '') {
+  let notes = state.notes;
+  if (search) notes = notes.filter(n => n.title.toLowerCase().includes(search) || n.body.toLowerCase().includes(search));
+
+  const el = document.getElementById('notes-grid');
+  if (!notes.length) {
+    el.innerHTML = `<div class="empty-state" style="grid-column:span 2"><span class="emoji">📝</span><p>${search?'No notes match your search':'No notes yet. Tap + to capture a thought!'}</p></div>`;
+    return;
+  }
+  el.innerHTML = notes.map(n => `
+    <div class="note-card" style="background:${n.color};border:1px solid ${n.color.replace('1e','2d').replace('2e','3d')}" onclick="editNote('${n.id}')">
+      <h4>${n.title}</h4>
+      <p>${n.body || ''}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="note-date">${fmtDate(n.createdAt)}</div>
+        <button onclick="event.stopPropagation();deleteNote('${n.id}')" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:18px;padding:0">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+// EXPENSES
+// ─────────────────────────────────────────────
+function setExpType(t) {
+  state.currentExpType = t;
+  document.getElementById('exp-expense').classList.toggle('active', t==='expense');
+  document.getElementById('exp-income').classList.toggle('active', t==='income');
+}
+
+function saveExpense() {
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  if (!amount || amount <= 0) { showToast('Please enter a valid amount'); return; }
+  state.expenses.unshift({
+    id: uid(),
+    type: state.currentExpType,
+    amount,
+    description: document.getElementById('exp-desc').value || document.getElementById('exp-cat').value,
+    category: document.getElementById('exp-cat').value,
+    date: new Date().toISOString(),
+  });
+  save();
+  closeModal('expense-modal');
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-desc').value = '';
+  renderExpenses();
+  showToast('Transaction added ✓');
+}
+
+function deleteExpense(id) {
+  state.expenses = state.expenses.filter(e => e.id !== id);
+  save(); renderExpenses(); showToast('Deleted');
+}
+
+function initCurrencyList() {
+  const currencies = [
+    {sym:'₹',name:'Indian Rupee (INR)'},
+    {sym:'$',name:'US Dollar (USD)'},
+    {sym:'€',name:'Euro (EUR)'},
+    {sym:'£',name:'British Pound (GBP)'},
+    {sym:'¥',name:'Japanese Yen (JPY)'},
+    {sym:'A$',name:'Australian Dollar (AUD)'},
+    {sym:'C$',name:'Canadian Dollar (CAD)'},
+    {sym:'AED',name:'UAE Dirham'},
+    {sym:'SGD',name:'Singapore Dollar'},
+  ];
+  const el = document.getElementById('currency-list');
+  el.innerHTML = currencies.map(c => `
+    <div class="settings-item" onclick="setCurrency('${c.sym}')">
+      <div style="font-size:18px;min-width:40px;font-weight:700">${c.sym}</div>
+      <div>${c.name}</div>
+      ${state.currency===c.sym ? '<div style="color:var(--green)">✓</div>' : ''}
+    </div>
+  `).join('');
+}
+
+function setCurrency(sym) {
+  state.currency = sym;
+  DB.set('currency', sym);
+  document.getElementById('curr-setting').textContent = sym + ' ' + (sym==='₹'?'INR':sym==='$'?'USD':sym==='€'?'EUR':sym==='£'?'GBP':'');
+  closeModal('currency-modal');
+  renderExpenses();
+  initCurrencyList();
+}
+
+function renderExpenses() {
+  const thisMonth = new Date().getMonth();
+  const monthly = state.expenses.filter(e => new Date(e.date).getMonth() === thisMonth);
+
+  const totalSpent = monthly.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+  const totalIncome = monthly.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+  const balance = totalIncome - totalSpent;
+  const sym = state.currency;
+
+  document.getElementById('total-spent').textContent = sym + totalSpent.toLocaleString('en-IN');
+  document.getElementById('total-income').textContent = sym + totalIncome.toLocaleString('en-IN');
+  document.getElementById('balance-label').textContent = `Balance: ${sym}${balance.toLocaleString('en-IN')}`;
+  const pct = totalIncome > 0 ? Math.min(100, (totalSpent/totalIncome)*100) : (totalSpent > 0 ? 100 : 0);
+  document.getElementById('expense-bar').style.width = pct + '%';
+
+  // Category breakdown
+  const cats = {};
+  monthly.filter(e=>e.type==='expense').forEach(e => {
+    const c = e.category.split(' ').slice(1).join(' ') || e.category;
+    cats[c] = (cats[c]||0) + e.amount;
+  });
+  const catEl = document.getElementById('category-breakdown');
+  catEl.innerHTML = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([cat,amt]) => `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px">
+      <div style="font-weight:600">${cat}</div>
+      <div style="color:var(--red);font-weight:700">${sym}${amt.toLocaleString('en-IN')}</div>
+    </div>
+  `).join('') || '<div style="color:var(--text2);font-size:13px">No expenses this month</div>';
+
+  // Transaction list
+  const el = document.getElementById('expense-list');
+  if (!state.expenses.length) {
+    el.innerHTML = '<div class="empty-state"><span class="emoji">💸</span><p>No transactions yet</p></div>';
+    return;
+  }
+  el.innerHTML = state.expenses.slice(0,30).map(e => `
+    <div class="expense-item">
+      <div class="exp-icon" style="background:${e.type==='expense'?'var(--red-bg)':'var(--green-bg)'}">
+        ${e.category.split(' ')[0]}
+      </div>
+      <div class="exp-body">
+        <div class="exp-name">${e.description}</div>
+        <div class="exp-cat">${e.category.split(' ').slice(1).join(' ')} · ${fmtDate(e.date)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="exp-amount ${e.type==='expense'?'red-text':'green-text'}">${e.type==='expense'?'-':'+'} ${sym}${e.amount.toLocaleString('en-IN')}</div>
+        <button onclick="deleteExpense('${e.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+function saveProfile() {
+  state.profile.name = document.getElementById('profile-name').value.trim() || 'DayFlow User';
+  state.profile.workStart = document.getElementById('work-start').value;
+  state.profile.workEnd = document.getElementById('work-end').value;
+  save();
+  closeModal('profile-modal');
+  setupGreeting();
+  document.getElementById('settings-name').textContent = state.profile.name;
+  const initials = state.profile.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('settings-avatar').textContent = initials;
+  showToast('Profile updated ✓');
+}
+
+function updateApiKeyStatus() {
+  const key = DB.get('apiKey');
+  const el = document.getElementById('api-key-status');
+  el.textContent = key ? 'Connected ✓' : 'Not set — AI features disabled';
+  el.style.color = key ? 'var(--green)' : 'var(--red)';
+}
+
+function changeApiKey() {
+  const key = prompt('Enter your Anthropic API key (sk-ant-...):', DB.get('apiKey') || '');
+  if (key !== null) {
+    state.apiKey = key.trim();
+    DB.set('apiKey', key.trim());
+    updateApiKeyStatus();
+    showToast(key.trim() ? 'API key updated ✓' : 'API key cleared');
+  }
+}
+
+function exportData() {
+  const data = {
+    exported: new Date().toISOString(),
+    tasks: state.tasks,
+    habits: state.habits,
+    habitLogs: state.habitLogs,
+    notes: state.notes,
+    expenses: state.expenses,
+    profile: state.profile,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `dayflow-export-${today()}.json`;
+  a.click();
+  showToast('Data exported ✓');
+}
+
+function clearData() {
+  if (confirm('Clear ALL data? This cannot be undone.')) {
+    ['tasks','habits','habitLogs','notes','expenses'].forEach(k => localStorage.removeItem('df_'+k));
+    state.tasks = []; state.habits = []; state.habitLogs = {}; state.notes = []; state.expenses = [];
+    save(); renderAll(); showToast('Data cleared');
+  }
+}
+
+// ─────────────────────────────────────────────
+// AI CHAT
+// ─────────────────────────────────────────────
+function getContextForAI() {
+  const pendingTasks = state.tasks.filter(t => t.status === 'todo').slice(0, 10);
+  const todayHabits = getTodayHabits();
+  const doneHabits = todayHabits.filter(h => isHabitDoneToday(h.id));
+  const thisMonth = new Date().getMonth();
+  const totalSpent = state.expenses.filter(e => e.type==='expense' && new Date(e.date).getMonth()===thisMonth).reduce((s,e)=>s+e.amount,0);
+
+  return `
+USER CONTEXT (as of ${new Date().toLocaleString()}):
+- Name: ${state.profile.name}
+- Pending tasks (${pendingTasks.length}): ${pendingTasks.map(t=>`"${t.title}" [${t.priority}]${t.due?` due ${fmtDate(t.due)}`:''}`).join(', ') || 'None'}
+- Work hours: ${state.profile.workStart} to ${state.profile.workEnd}
+- Today's habits (${todayHabits.length} total, ${doneHabits.length} done): ${todayHabits.map(h=>`${h.emoji}${h.name}(${isHabitDoneToday(h.id)?'✓':'pending'}, streak:${h.streak||0})`).join(', ') || 'None'}
+- This month's spending: ${state.currency}${totalSpent.toLocaleString()}
+- Notes count: ${state.notes.length}
+- Current time: ${new Date().toLocaleTimeString()}
+`.trim();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+  await sendMessage(text);
+}
+
+async function sendChip(text) {
+  await sendMessage(text);
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function appendMessage(role, text) {
+  const el = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+  div.innerHTML = `<div class="bubble" id="bubble-${Date.now()}">${text}</div><div class="msg-time">${time}</div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  return div.querySelector('.bubble');
+}
+
+function showTyping() {
+  const el = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="bubble" style="background:var(--bg3);border:1px solid var(--border)"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+async function sendMessage(text) {
+  appendMessage('user', text);
+
+  const apiKey = DB.get('apiKey');
+  if (!apiKey) {
+    appendMessage('ai', '⚠️ No API key configured. Go to Settings → API Key to add your Anthropic API key and unlock AI features.');
+    return;
+  }
+
+  // Store in history
+  state.chatHistory.push({ role: 'user', content: text });
+  if (state.chatHistory.length > 20) state.chatHistory = state.chatHistory.slice(-20);
+
+  showTyping();
+
+  try {
+    const systemPrompt = `You are DayFlow AI, a smart and friendly personal life assistant. You help users manage their day, tasks, habits, expenses, and productivity.
+
+Be concise, warm, and practical. Use bullet points for lists. Use emojis sparingly but effectively.
+
+When asked to plan a day, structure it clearly with times. When giving productivity advice, be specific and actionable.
+
+${getContextForAI()}`;
+
+    const messages = state.chatHistory.slice(-10).map(m => ({ role: m.role, content: m.content }));
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages,
+      }),
+    });
+
+    hideTyping();
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + response.status);
+    }
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'Sorry, I could not generate a response.';
+
+    state.chatHistory.push({ role: 'assistant', content: reply });
+    save();
+
+    appendMessage('ai', reply.replace(/\n/g, '<br>'));
+
+    // Update AI tip on home
+    document.getElementById('ai-tip-text').textContent = reply.split('\n')[0].slice(0, 120);
+
+  } catch (err) {
+    hideTyping();
+    appendMessage('ai', `⚠️ Error: ${err.message}. Check your API key in Settings.`);
+  }
+}
+
+// ─────────────────────────────────────────────
+// AI PRIORITISE TASKS
+// ─────────────────────────────────────────────
+async function aiPrioritise() {
+  const pending = state.tasks.filter(t => t.status === 'todo');
+  if (!pending.length) { showToast('No pending tasks to prioritise'); return; }
+
+  const btn = document.getElementById('plan-btn') || document.querySelector('.generate-btn');
+  const apiKey = DB.get('apiKey');
+  if (!apiKey) {
+    showToast('Add API key in Settings to use AI features');
+    showScreen('settings');
+    return;
+  }
+
+  showToast('AI is prioritising your tasks...');
+
+  const taskList = document.querySelector('#tasks-screen .generate-btn');
+  if (taskList) { taskList.disabled = true; taskList.innerHTML = '<div class="spinner"></div> Analysing...'; }
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        system: 'You are a productivity assistant. Given a list of tasks, re-order them by priority (most important first) and assign priorities. Return ONLY valid JSON array with same task ids and updated priority fields. Format: [{"id":"...","priority":"high|medium|low","reason":"brief reason"}]',
+        messages: [{
+          role: 'user',
+          content: `Prioritise these tasks for me today (${new Date().toLocaleDateString()}):\n${JSON.stringify(pending.map(t=>({id:t.id,title:t.title,due:t.due,estimatedMin:t.estimatedMin})))}\n\nReturn JSON only.`
+        }]
+      }),
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '[]';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const prioritised = JSON.parse(clean);
+
+    prioritised.forEach((p, idx) => {
+      const t = state.tasks.find(t => t.id === p.id);
+      if (t) { t.priority = p.priority; t.sortOrder = idx; }
+    });
+    state.tasks.sort((a,b) => (a.sortOrder||99) - (b.sortOrder||99));
+    save();
+    renderTasks();
+    showToast('Tasks prioritised by AI ✦');
+  } catch(e) {
+    showToast('AI prioritisation failed: ' + e.message);
+  } finally {
+    const btn2 = document.querySelector('#tasks-screen .generate-btn');
+    if (btn2) { btn2.disabled = false; btn2.innerHTML = '<span>✦</span> AI Prioritise My Tasks'; }
+  }
+}
+
+// ─────────────────────────────────────────────
+// AI DAILY PLANNER
+// ─────────────────────────────────────────────
+async function generatePlan() {
+  const apiKey = DB.get('apiKey');
+  if (!apiKey) {
+    showToast('Add API key in Settings to use AI planner');
+    showScreen('settings');
+    return;
+  }
+
+  const btn = document.getElementById('plan-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Building your plan...';
+
+  const pending = state.tasks.filter(t => t.status === 'todo').slice(0, 8);
+  const habits = getTodayHabits();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: `You are a daily planner AI. Given tasks and habits, create a realistic daily schedule. Return ONLY valid JSON:
+{
+  "greeting": "motivational opening line",
+  "blocks": [
+    {"time":"09:00","duration":"90 min","title":"Deep work","description":"Focus on most important task","color":"#7c6af7","type":"work"},
+    {"time":"10:30","duration":"15 min","title":"Break","description":"Stretch and drink water","color":"#4ade80","type":"habit"}
+  ],
+  "tip": "one practical productivity tip for today"
+}
+Types: work, habit, break, admin, learning, personal. Colors: use purple for work, green for habits, amber for breaks, blue for learning.`,
+        messages: [{
+          role: 'user',
+          content: `Create my day plan.
+Name: ${state.profile.name}
+Work hours: ${state.profile.workStart} to ${state.profile.workEnd}
+Today's tasks: ${JSON.stringify(pending.map(t=>({title:t.title,priority:t.priority,estimatedMin:t.estimatedMin||30})))}
+Habits to include: ${habits.map(h=>h.emoji+' '+h.name).join(', ')||'None'}
+Current time: ${new Date().toLocaleTimeString()}
+
+Return JSON only.`
+        }]
+      }),
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || '{}';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const plan = JSON.parse(clean);
+
+    renderPlan(plan);
+    showToast('Your day is planned ✦');
+  } catch(e) {
+    showToast('Plan generation failed: ' + e.message);
+    document.getElementById('plan-output').innerHTML = `<div class="empty-state"><span class="emoji">⚠️</span><p>Failed to generate plan: ${e.message}</p></div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>✦</span> Regenerate Plan';
+  }
+}
+
+function renderPlan(plan) {
+  const el = document.getElementById('plan-output');
+  el.innerHTML = `
+    <div class="card" style="border-color:rgba(124,106,247,0.3);background:var(--accent-bg);margin-bottom:12px">
+      <div class="ai-badge" style="margin-bottom:8px">✦ AI Generated</div>
+      <p style="font-size:14px;color:var(--text);line-height:1.6">${plan.greeting || ''}</p>
+    </div>
+    <div class="timeline" id="plan-timeline"></div>
+    ${plan.tip ? `<div class="card" style="margin-top:4px"><div class="card-title">Today's tip</div><p style="font-size:14px;color:var(--text);line-height:1.6">💡 ${plan.tip}</p></div>` : ''}
+  `;
+
+  const timeline = document.getElementById('plan-timeline');
+  (plan.blocks || []).forEach(block => {
+    const div = document.createElement('div');
+    div.className = 'time-block';
+    div.innerHTML = `
+      <div class="time-label">${block.time}</div>
+      <div class="time-dot" style="background:${block.color||'var(--accent)'}"></div>
+      <div class="time-content" style="border-left:3px solid ${block.color||'var(--accent)'}">
+        <h4>${block.title}</h4>
+        <p>${block.description} · ${block.duration}</p>
+      </div>
+    `;
+    timeline.appendChild(div);
+  });
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─────────────────────────────────────────────
+// SEED DATA (first run)
+// ─────────────────────────────────────────────
+function seedData() {
+  if (DB.get('seeded')) return;
+  state.tasks = [
+    { id: uid(), title: 'Review project proposal', priority: 'high', status: 'todo', notes: '', estimatedMin: 60, createdAt: new Date().toISOString() },
+    { id: uid(), title: 'Reply to emails', priority: 'medium', status: 'todo', notes: '', estimatedMin: 30, createdAt: new Date().toISOString() },
+    { id: uid(), title: 'Read 20 pages', priority: 'low', status: 'todo', notes: '', estimatedMin: 30, createdAt: new Date().toISOString() },
+  ];
+  state.habits = [
+    { id: uid(), name: 'Drink water', emoji: '💧', frequency: 'daily', streak: 3, bestStreak: 7, createdAt: new Date().toISOString() },
+    { id: uid(), name: 'Exercise', emoji: '🏃', frequency: 'daily', streak: 1, bestStreak: 14, createdAt: new Date().toISOString() },
+    { id: uid(), name: 'Read', emoji: '📚', frequency: 'daily', streak: 5, bestStreak: 5, createdAt: new Date().toISOString() },
+    { id: uid(), name: 'Meditate', emoji: '🧘', frequency: 'daily', streak: 0, bestStreak: 10, createdAt: new Date().toISOString() },
+  ];
+  state.notes = [
+    { id: uid(), title: 'Welcome to DayFlow!', body: 'Your AI-powered life assistant. Add tasks, track habits, capture notes, and let AI plan your day.', color: '#1e2a1e', createdAt: new Date().toISOString() },
+    { id: uid(), title: 'Meeting notes', body: 'Discussed Q2 goals. Focus on user acquisition and retention metrics.', color: '#1e1e2e', createdAt: new Date().toISOString() },
+  ];
+  state.expenses = [
+    { id: uid(), type: 'income', amount: 75000, description: 'Monthly salary', category: '🤝 Salary', date: new Date().toISOString() },
+    { id: uid(), type: 'expense', amount: 2500, description: 'Groceries', category: '🍕 Food', date: new Date().toISOString() },
+    { id: uid(), type: 'expense', amount: 800, description: 'Uber', category: '🚗 Transport', date: new Date().toISOString() },
+  ];
+  DB.set('seeded', true);
+  save();
+}
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+seedData();
+init();
+</script>
+</body>
+</html>
